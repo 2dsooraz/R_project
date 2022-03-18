@@ -1,0 +1,178 @@
+---
+title: "Project 3"
+author: "Suraj"
+date: "24/12/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+__Part 1: Data visualization with base R package__
+
+```{r}
+cdata <- as.data.frame(CO2)
+
+barplot(table(cdata$Plant),main = "Barplot of Plant")
+```
+```{r}
+barplot(table(cdata$Type),main = "Barplot of Type",col = "lavender",ylim = range(0,50))
+```
+```{r}
+barplot(table(cdata$Treatment),main = "Barplot of Treatment",col = "mistyrose",ylim = range(0,50),las=1)
+```
+
+```{r}
+hist(cdata$conc,main = "Histogram of Concentration",col = "cornsilk",xlab = "Conc",ylim = range(0,14),las=1)
+```
+```{r}
+hist(cdata$uptake,main = "Histogram of Uptake",col = "lightblue",xlab = "Uptake",xlim = range(0,60))
+```
+```{r}
+plot(cdata$conc,cdata$uptake, main = "Scatterplot of Conc and Uptake",xlab = "Conc",ylab = "Uptake",ylim = range(0,50),las=1)
+```
+In the scatterplot, we can clearly see that the association between the conc and uptake variable is non linear. And thus, correlation should be calculated using spearman method.
+
+```{r}
+cor(cdata$conc,cdata$uptake,method = "spearman")
+```
+As there was non linear relationship between conc and uptake variable, correlation using spearman method is calculated. The value shows positive, weak relationship between conc and uptake variable.
+
+__Part 2 : Data Visualization with ggplot2 package__
+
+```{r}
+library(ggplot2)
+ggplot(data = CO2, aes(Plant))+
+  geom_bar()+
+  labs(title = "Histogram of Plant variable")+
+  ylim(0,8)
+```
+```{r}
+ggplot(CO2,aes(Type))+
+  geom_bar(fill="lightblue")+
+  ggtitle("Histogram of Type variable")+
+  ylim(0,50)
+
+
+```
+
+```{r}
+ggplot(CO2,aes(Treatment))+
+  geom_bar(fill="steelblue")+
+  ggtitle("Histogram of Treatment variable")+
+  ylim(0,45)
+```
+
+```{r}
+ggplot(CO2,aes(conc))+
+  geom_histogram(binwidth = 50)+
+  ggtitle("Histogram of Conc variable")
+```
+```{r}
+xlab("Conc")
+```
+```{r}
+ggplot(CO2,aes(uptake))+
+  geom_histogram(fill="steelblue")+
+  ggtitle("Histogram of Treatment variable")+
+  xlab("Uptake")+
+  ylim(0,8)
+```
+
+```{r}
+ggplot(CO2,aes(conc,uptake))+
+  geom_point()+
+  labs(x = "Conc",y = "Uptake")+
+  ylim (NA,50)
+```
+The conc and uptake variable show the non linear association between them. As the non linear association exist, correlation using spearman method is used.
+
+```{r}
+cor(cdata$conc,cdata$uptake,method = "spearman")
+```
+__Part 3: Advantages and Limitations of base R and ggplot2 package__
+
+ggplot2 is an R package for producing statistical or data graphics. It implements a grammar of graphics based on Wilkinson’s book. Comparison of both are as follows:
+
+-The base idea of ggplot2 is to split a chart into graphical objects,data, scale, coordinate system, annotation and think about it separately. On the other hand, function in base R graphics specify everything in the function arguments. In ggplot2 ‘+’ symbol is used to separate the different layers whereas in base R, comma(,) separates the arguments in the function.
+
+-ggplot2 some built in data management. For example ‘bin’ for barplot. It automatically creates the bin and count the each element in the bin. In base R ‘table’ that is outside of the visualization function is used.
+
+-ggplot2 has the consistent syntax. The idea is to create the different layers and ‘+’ symbol separating those symbols. The cons is, it has different type of syntax then rest of R.
+
+-ggplot2 is the powerful function for visualization,can easily create complex graph compared to base R package.
+
+-Base R package is simple, faster and straight forward than ggplot2. ggplot2 is slower than base R package. But the syntax of the Base R package will be heavy for the complex graph.
+
+__Part 4: Text analysis with base/ggplot packages and Social Network Analysis with igraph package__
+ 
+```{r}
+library(igraph)
+# Loading the termDocMatrix
+load("termDocMatrix.rdata")
+
+#Converting to matrix
+tmatrix <- as.matrix(termDocMatrix)
+class(tmatrix)
+```
+```{r}
+#Getting the term frequency
+freq <- sort(rowSums(tmatrix),decreasing = T)
+freq
+```
+
+```{r}
+hist(freq,main = "Histogram of Word Frequency", xlab = "Freq",ylab = NULL,xlim = range(0,100),ylim = range(0,10),las=1)
+```
+```{r}
+hist(freq,main="Histogram of Frequency", xlab = "Words",ylab=NA,xlim = range(0,100),ylim = range(0,10),las = 1)
+```
+```{r}
+#Creating histogram for frequency greater than or equal to 5 using ggplot2 package
+dmatrix <- as.data.frame(tmatrix)
+freq1 <- rowSums(dmatrix)
+freq1
+```
+
+```{r}
+ggplot(dmatrix[which(freq1 >=5)],aes(freq))+
+  geom_histogram()+
+  ggtitle("Histogram of Word frequency")+
+  labs(x = "Word frequency",y="count")
+```
+
+```{r}
+library(wordcloud)
+```
+```{r}
+wordcloud(words=names(freq),freq = freq,random.order = T)
+```
+
+__Performing Social Network Analysis__
+
+```{r}
+#Converting each cell matrix to 1 if greater than 1 and creating a transition matrix
+tmatrix[tmatrix > 1] = 1
+tranmatrix <- tmatrix %*% t(tmatrix)
+tranmatrix[5:9,5:9]
+```
+```{r}
+library(igraph)
+
+```
+
+```{r}
+gp <- graph.adjacency(tranmatrix,mode = "undirected",weighted = T)
+simplify(gp)
+```
+```{r}
+V(gp)$label <- V(gp)$name
+V(gp)$degree <- degree(gp)
+
+set.seed(3952)
+layout1 <- layout.fruchterman.reingold(gp)
+plot(gp,layout1)
+```
+
+Here sna graph is plotted, where nodes are the words in ther termDocMatrix and links defines the relation with other words.
+
+

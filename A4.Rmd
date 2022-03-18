@@ -1,0 +1,27 @@
+---
+title: "A4"
+author: "Suraj"
+date: "01/12/2022"
+output: html_document
+---
+1. Attaching packages
+```{r}
+library(dplyr)
+```
+
+2. Installing popular packages.
+
+```{r}
+library(Rcmdr)
+```
+
+Reading json file in R.
+
+```{r}
+library('rjson')
+
+data <- fromJSON(file = 'read.json')
+print(data)
+
+```
+

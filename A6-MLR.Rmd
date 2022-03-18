@@ -1,0 +1,237 @@
+---
+title: "A6-MLR"
+author: "Suraj"
+date: "29/12/2021"
+output: html_document
+---
+
+__1.Fit multiple linear regression on “mtcars” data using mpg variable as dependent variable and rest of the variables as independent variables and interpret the result carefully in terms of model fit and the multicollinearity.__
+
+```{r}
+mlr <- lm(mpg~.,data = mtcars)
+summary(mlr)
+
+```
+Interpretation : For the multiple linear regression there is one assumptions, the multicollinearity must not be present i.e correlations between independent variables must not be high. The multicollinearity is checked by using ‘vif’ function from car package. If vif > 10, multicollinearity will be confirmed for an independent variable.
+
+```{r}
+library(car)
+```
+```{r}
+vif(mlr)
+```
+As the independent variable ‘disp’ is highly correlated i.e vif > 10, therefore we fit multiple linear regression without disp i.e. we remove disp from independent variable and try multiple regression fitting again. 
+
+```{r}
+mlr <- lm(mpg~cyl+hp+drat+wt+qsec+vs+am+gear+carb, data = mtcars)
+vif(mlr)
+```
+Again here the cyl variable shows vif > 10 which means it is highly correlated. Therefore, we again fit multiple linear regression without "cyl"variable. 
+
+```{r}
+mlr <- lm(mpg ~ hp+drat+wt+qsec+vs+am+gear+carb,data = mtcars)
+vif(mlr)
+```
+ The vif < 10 for all independent variables now the total data is splitted into testing data and training data.
+
+__2.Split the “mtcars” data into two random datasets(training and testing sets) with 70:30 partition__
+
+```{r}
+data <- mtcars
+set.seed(534)
+ind <- sample(2,nrow(mtcars),replace = T,prob = c(0.7,0.3))
+
+train.data <- data[ind==1,]
+test.data <- data[ind==2,]
+```
+
+There is 70% training data and 30% testing data.
+
+__3.Fit the multiple linear regression in the training set and validate its result with testing data.__
+
+
+```{r}
+mlr1 <- lm(mpg ~ hp+drat+wt+qsec+vs+am+gear+carb,data = train.data)
+print(mlr1)
+```
+```{r}
+library(caret)
+```
+```{r}
+ndata <- data.frame(pred = predict(mlr1),actual = train.data$mpg)
+
+data.frame(RMSE = RMSE(ndata$pred,ndata$actual),
+           R2 = R2(ndata$pred,ndata$actual),
+           MAE = MAE(ndata$pred,ndata$actual))
+```
+ Multiple linear regression is fitted in the training data and RMSE, R2 and MAE is calculated.
+
+
+```{r}
+library(dplyr)
+predictions <- mlr1 %>% predict(test.data)
+data.frame(RMSE = RMSE(predictions,test.data$mpg),
+           R2 = R2(predictions,test.data$mpg),
+           MAE = MAE(predictions,test.data$mpg))
+```
+Performing validation with testing data. 
+
+__4.Fit the multiple linear regression in the training set with LOOCV control and validate its results with testing set.__
+
+```{r}
+set.seed(200)
+train.control <- trainControl (method = "LOOCV")
+
+l_model <- train(mpg ~ hp+drat+wt+qsec+vs+am+gear+carb, data = train.data, method = "lm", trControl = train.control)
+
+print(l_model)
+```
+Multiple linear regression is fitted with  Leave-One-Out Cross-Validation control. 
+
+```{r}
+l_predictions <- l_model %>% predict(test.data)
+
+data.frame(RMSE = RMSE(l_predictions,test.data$mpg),
+           R2 = R2(l_predictions,test.data$mpg),
+           MAE = MAE(l_predictions,test.data$mpg))
+```
+__5.Fit the multiple linear regression in the training set with 10-folds and validate its results with testing set.__
+
+
+```{r}
+set.seed(200)
+train.ctrl <- trainControl(method = "cv",number = 10)
+
+k_model <- train(mpg ~ hp+drat+wt+qsec+vs+am+gear+carb, data = train.data, method = "lm", trControl = train.ctrl)
+
+print(k_model)
+
+```
+The model is fitted with 10 folds validation method and validated with testing set.
+
+```{r}
+k_predictions <- k_model %>% predict(test.data)
+
+data.frame(RMSE = RMSE(k_predictions,test.data$mpg),
+           R2 = R2(k_predictions,test.data$mpg),
+           MAE = MAE(k_predictions,test.data$mpg))
+```
+__6.Fit the multiple linear regression in the training set with 10-folds and 3 repeats control and validate its results with testing set.__
+```{r}
+set.seed(200)
+train.control1 <- trainControl(method = "repeatedcv",number = 10,repeats = 3)
+
+repk_model <- train(mpg ~ hp+drat+wt+qsec+vs+am+gear+carb, data = train.data, method = "lm", trControl = train.control1) 
+print(repk_model)
+```
+```{r}
+repk_predictions <- repk_model %>% 
+  predict(test.data)
+
+data.frame(RMSE = RMSE(repk_predictions,test.data$mpg),
+           R2 = R2(repk_predictions,test.data$mpg),
+           MAE = MAE(repk_predictions,test.data$mpg))
+```
+
+__7.Which model is best model? Why? Describe carefully.__
+
+```{r}
+print(l_model)
+```
+
+```{r}
+print(k_model)
+```
+```{r}
+print(repk_model)
+```
+If we consider the R2 value then the model with high R2 value is considered as better model and if RMSE value is considered then the model low RMSE value is considered as better model. We can consider the K-fold validation as the best model as the RMSE value is lowest and R2 also a high value. Another point is in this validation every single data from original data sets has a chance in appearing both training and testing data. This validation methods also works efficiently when we have less data.
+
+__9. Predict the weight using the best model identified above.__
+```{r}
+mlr1 <- lm(wt ~ .,data = mtcars)
+
+library(car)
+vif(mlr1)
+```
+We have to remove cyl.
+```{r}
+mlr1 <- lm(wt ~ mpg+disp+hp+drat+qsec+vs+am+gear+carb, data = mtcars)
+
+vif(mlr1)
+```
+```{r}
+trainfor_wt <- trainControl(method = "cv",number = 10)
+
+modelfor_wt <- train(wt ~ mpg+disp+hp+drat+qsec+vs+am+gear+carb, method = "lm", data = train.data, trControl = trainfor_wt)
+print(modelfor_wt)
+```
+```{r}
+predictions_forwt <- modelfor_wt %>% predict(test.data)
+
+data.frame(RMSE = RMSE(predictions_forwt, test.data$wt),
+           R2 = R2(predictions_forwt, test.data$wt),
+           MAE = MAE(predictions_forwt,test.data$wt))
+```
+__10. Change all the independent variables as standardized variable using “scale” command in R/R Studio.__
+```{r}
+new_mtcars <- data.frame(scale(mtcars))
+head(new_mtcars)
+```
+
+__11.Fit the multiple linear regression on “mtcars” data using mpg as dependent variable and all the standardized variable as the independent variable and interpret the results carefully in terms of model fit and mutlicollinearity.__
+
+```{r}
+mlr2 <- lm(mpg ~ .,data = new_mtcars)
+mlr2
+```
+```{r}
+vif(mlr2)
+```
+The multiple linear regression is fitted with mpg with dependent variable and all the other variables as independent variable and checked for multicollinearity using vif function.
+
+```{r}
+mlr2 <- lm(mpg ~ . -disp,data = new_mtcars)
+print(mlr2)
+```
+```{r}
+vif(mlr2)
+```
+```{r}
+mlr22 <- lm(mpg ~ hp+drat+wt+qsec+vs+am+gear+carb, data = new_mtcars)
+vif(mlr22)
+```
+```{r}
+data1 <- new_mtcars
+set.seed(224)
+
+ind1 <- sample(2, nrow(data1),replace = T, prob = c(0.7,0.2))
+
+train.data1 <- data1[ind==1,]
+test.data1 <- data1[ind==2,]
+```
+
+```{r}
+mlr3 <- lm(mpg ~ hp+drat+wt+qsec+vs+am+gear+carb, data = train.data1)
+print(mlr3)
+```
+```{r}
+model3 <- data.frame(pred = predict(mlr3),actual = train.data1$mpg)
+
+RMSE <- RMSE(model3$pred, model3$actual)
+R2 <- R2(model3$pred, model3$actual)
+MAE <- MAE(model3$pred, model3$actual)
+
+data.frame(RMSE,R2,MAE)
+```
+Fitted the model in training data.
+
+```{r}
+predictions <- mlr3 %>% predict(test.data1)
+
+data.frame(RMSE = RMSE(predictions,test.data1$mpg),
+           R2 = R2(predictions,test.data1$mpg),
+           MAE = MAE(predictions,test.data1$mpg))
+```
+The model is checked and validated in testing data.
+

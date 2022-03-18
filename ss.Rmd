@@ -1,0 +1,132 @@
+---
+title: "R Notebook"
+output:
+  html_notebook: default
+  word_document: default
+  pdf_document: default
+---
+
+```{r}
+#'Question no.7
+set.seed(35)
+mpg <- sample(10:50, size  = 100, replace = T)
+am <- sample(c(0,1), size = 100, replace = T)
+
+wt <- sample(1:10, size = 100, replace = T)
+hp <- sample(125:400, size = 100, replace = T)
+
+df1 <- data.frame(cbind(mpg, am, wt, hp))
+head(df1)
+
+ind <- sample(2, nrow(df1), replace = T, prob = c(0.7, 0.3))
+
+train <- df1[ind ==1, ]
+test <- df1[ind ==2, ]
+
+library(class)
+
+linear.model <- lm(mpg~., data = train)
+
+```
+```{r}
+#'Question no. 8
+set.seed(35)
+mpg <- sample(10:50, 150, replace=T)
+am <- sample(c(0,1), replace=TRUE, size=150)
+wt <- sample(1:10, 150, replace=T)
+hp <- sample(125:400,150,replace=T)
+
+data1 <- data.frame(mpg=mpg,am=am,wt=wt,hp=hp)
+set.seed(35)
+ind = sample(2,nrow(data1),replace = T, prob = c(0.8, 0.2))
+train_data <- data1[ind==1,]
+test_data <- data1[ind==2,]
+
+logic_model <- train(am~., data = train_data, method = "glm", family= "binomial")
+summary(logic_model)
+pred1 <- predict(logic_model, test_data)
+knn.model <- knnreg(x= train[, -1], y= train[, 1], k = 3)
+summary(linear.model)
+summary(linear.model)
+summary(knn.model)
+
+linear.pred <- predict(linear.model, test)
+knn.pred <- predict(knn.model, test[, -1])
+
+library(caret)
+
+data.frame( Linear = c(R2(linear.pred, test$mpg),RMSE(linear.pred, test$mpg)), knn=
+              c(R2(knn.pred, test$mpg), RMSE(knn.pred, test$mpg)))
+
+```
+
+
+```{r}
+
+test_data$am = as.factor(test_data$am)
+
+confusionMatrix(pred1, test_data$am)
+
+
+library(e1071)
+naive_model <- naiveBayes(am~., train_data)
+
+summary(naive_model)
+
+pred3 <- predict(naive_model, test_data)
+
+confusionMatrix(pred3,test_data$defaulted_loan)
+
+```
+
+```{r}
+#'question no. 6
+#Generating mpg data
+set.seed(35)
+range <- 10:50
+mpg <- sample(range,50, replace = T)
+
+#Generating am data
+am <- sample(0:1,50, replace = TRUE)
+
+## b.
+shapiro.test(mpg[am == 0])
+
+shapiro.test(mpg[am == 1])
+## c.
+var.test(mpg ~ am)
+## d.
+t.test(mpg ~ am, var.equal = T)
+
+
+```
+
+```{r}
+#'Question no. 9
+dim(USArrests)
+dimnames(USArrests)
+apply(USArrests,2,mean)
+apply(USArrests,2,var)
+pca.out<-prcomp(USArrests,scale=TRUE)
+pca.out
+summary(pca.out)
+names(pca.out)
+biplot(pca.out,scale = 0, cex=0.65)
+
+```
+
+```{r}
+#'Question no. 10
+
+set.seed(35)
+data <- matrix(rnorm(50*2),ncol = 2)
+dist <- dist(data)
+cluster1 <- hclust(dist,method = "single")
+plot(cluster1)
+cluster2 <- hclust(dist,method = "complete")
+plot(cluster2)
+plot(cluster2)
+abline(h=2.5,col = "red")
+```
+
+
